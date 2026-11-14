@@ -24,7 +24,7 @@ GOOD = {
     "schema": "skbrain.instance.v1",
     "estate": "example",
     "namespace": "ops",
-    "framework": "skbrain-v1.0.0",
+    "framework": "skbrain-v1.0.1",
     "forge": "forge.example.org",
     "projector_nodes": ["example-1"],
     "skrsi": {"instance": "example-org/skrsi-config-example"},
@@ -42,8 +42,8 @@ def _with(**over):
 def test_load_config_happy_path(canon: Path):
     cfg = load_config(canon)
     assert cfg.estate == "example"
-    assert cfg.framework == "skbrain-v1.0.0"
-    assert cfg.framework_version == "1.0.0"
+    assert cfg.framework == "skbrain-v1.0.1"
+    assert cfg.framework_version == "1.0.1"
     assert cfg.projector_nodes == ("example-1",)
     assert cfg.skrsi_instance == "example-org/skrsi-config-example"
     assert cfg.repo_name == "skbrain-ops-example"

@@ -4,6 +4,12 @@ All notable changes to this project are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] - 2026-11-14
+
+### Changed
+- Vendored skrsi vocabulary moves to skrsi `main` at `aafcd22a`: four lesson tags from skrsi#17 (`token-budget`,
+  `retry-amplification`, `no-attribution`, `unalerted-rate`) are now accepted by `skbrain check`.
+
 ## [Unreleased]
 
 ## [1.0.0] - 2026-11-14

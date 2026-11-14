@@ -9,5 +9,5 @@ Never edit these files here. To move to a newer skrsi release, copy the two file
 from that tag and update `SKRSI_TAG` in the same commit. skrsi owns the
 vocabulary; skbrain only reads it.
 
-Current copy: `skrsi-v1.1.0+48a6694e` means skrsi `main` at commit `48a6694e`, which is the `skrsi-v1.1.0` tag plus the nine
-lesson tags appended in skrsi#14 (append-only within v1). Re-vendor from the next skrsi release tag.
+Current copy: `skrsi-v1.1.0+aafcd22a` means skrsi `main` at commit `aafcd22a`: the `skrsi-v1.1.0` tag plus the lesson tags
+appended in skrsi#14 and skrsi#17 (append-only within v1, cap 32). Re-vendor from the next skrsi release tag.

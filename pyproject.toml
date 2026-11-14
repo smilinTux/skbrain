@@ -1,6 +1,6 @@
 [project]
 name = "skbrain"
-version = "1.0.0"
+version = "1.0.1"
 description = "The skbrain framework: a git-canon operations brain (runbooks, known errors, postmortems, CMDB definitions) projected into Postgres for retrieval."
 readme = "README.md"
 license = { text = "Apache-2.0" }
