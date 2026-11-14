@@ -1,0 +1,74 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["skbrain-v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+      - name: Unit tests
+        run: pytest -q
+      - name: Scrub check (public tree)
+        run: python scripts/validate_public.py
+      - name: Check the example estate instance
+        run: skbrain check --canon templates/instance-repo --repo-name skbrain-ops-example
+      - name: The instance generator reproduces the fixture
+        run: |
+          scripts/generate-instance-template.sh "$RUNNER_TEMP/instance-out"
+          diff -r templates/instance-repo "$RUNNER_TEMP/instance-out"
+      - name: Build the wheel and check it ships schemas and vendored files
+        run: |
+          python -m pip wheel . --no-deps -w "$RUNNER_TEMP/dist"
+          python - <<'PY'
+          import glob, os, zipfile
+          whl = glob.glob(os.environ["RUNNER_TEMP"] + "/dist/skbrain-*.whl")[0]
+          names = zipfile.ZipFile(whl).namelist()
+          for want in (
+              "skbrain/_data/schemas/skbrain-instance-v1.schema.json",
+              "skbrain/_data/schemas/page-frontmatter-v1.schema.json",
+              "skbrain/vendor/skrsi/lesson-v1.schema.json",
+              "skbrain/vendor/skrsi/lesson-tags-v1.json",
+              "skbrain/vendor/skrsi/SKRSI_TAG",
+          ):
+              assert want in names, want
+          PY
+
+  docs-check:
+    uses: smilinTux/sk-standards/.github/workflows/docs-check.yml@main
+
+  release-scrub:
+    # A tag is a release: the private denylist is required, and a missing one fails closed.
+    if: startsWith(github.ref, 'refs/tags/skbrain-v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Scrub with the private denylist (release run, fails closed)
+        env:
+          SKBRAIN_SCRUB_RELEASE: "1"
+          DENYLIST: ${{ secrets.SKBRAIN_SCRUB_DENYLIST }}
+        run: |
+          if [ -n "$DENYLIST" ]; then
+            printf '%s\n' "$DENYLIST" > "$RUNNER_TEMP/denylist.txt"
+            export SKBRAIN_SCRUB_DENYLIST="$RUNNER_TEMP/denylist.txt"
+          fi
+          python scripts/validate_public.py
