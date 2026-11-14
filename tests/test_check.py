@@ -115,7 +115,7 @@ def test_lesson_tag_outside_vocabulary_fails(canon: Path):
 
 
 def test_lesson_tags_on_other_pages_must_be_vocabulary_keys(canon: Path):
-    _edit(canon / "pages" / "postmortems" / "postmortem-2026-01-15-widget-wedge.md", "lesson_tags: [job-failure-streak]", "lesson_tags: [token-budget]")
+    _edit(canon / "pages" / "postmortems" / "postmortem-2026-01-15-widget-wedge.md", "lesson_tags: [job-failure-streak]", "lesson_tags: [not-a-skrsi-tag]")
     report = run_check(canon)
     assert "lesson-tag" in codes(report, ERROR)
 
