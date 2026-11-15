@@ -9,6 +9,15 @@ All notable changes to this project are recorded here. The format follows
 ### Added
 - Instance workflow template: a step warns when a PR author is not in `skbrain.yaml` `writers` (warning only).
 
+## [1.0.2] - 2026-11-15
+
+### Fixed
+- Dependencies: dropped the `click<8.2` and `typer<0.13` upper caps. In a shared venv they pulled click down
+  from 8.4 to 8.1.8 and typer from 0.27 to 0.12.5, which broke `huggingface-hub` (needs click >= 8.4.2).
+  Tested on click 8.1.8 to 8.5.1 and typer 0.16 to 0.29. The typer floor rises to 0.16, the first release that
+  works with click >= 8.2 (older typer fails 13 CLI tests and `skbrain --help` there).
+- Tests: `CliRunner` is built without `mix_stderr` on click >= 8.2, which removed that argument.
+
 ## [1.0.1] - 2026-11-14
 
 ### Changed

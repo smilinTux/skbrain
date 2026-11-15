@@ -10,7 +10,12 @@ from typer.testing import CliRunner
 from skbrain.check import ERROR, WARNING, run_check
 from skbrain.cli import app
 
-runner = CliRunner(mix_stderr=False)
+# click < 8.2 mixes stderr into output unless told not to; click >= 8.2 always
+# keeps result.stderr separate and dropped the mix_stderr argument.
+try:
+    runner = CliRunner(mix_stderr=False)
+except TypeError:
+    runner = CliRunner()
 
 
 def codes(report, severity=None):
