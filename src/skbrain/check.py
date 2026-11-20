@@ -26,6 +26,7 @@ from __future__ import annotations
 import datetime as _dt
 import json
 import re
+import subprocess
 from dataclasses import asdict, dataclass, field
 from functools import lru_cache
 from importlib import resources
@@ -224,13 +225,39 @@ def _check_evidence_refs(
             )
 
 
+def _origin_repo_name(root: Path) -> str | None:
+    """The repo name from the ``origin`` remote, when *root* is itself a git work tree.
+
+    A worktree directory is named ``<repo>.<branch>``, so its own name is not the
+    repo's. A canon nested inside some other repo has no remote of its own and
+    returns None (the parent's remote never names it).
+    """
+    try:
+        top = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=10, check=False,
+        )
+        if top.returncode != 0 or Path(top.stdout.strip()).resolve() != root:
+            return None
+        url = subprocess.run(
+            ["git", "-C", str(root), "remote", "get-url", "origin"],
+            capture_output=True, text=True, timeout=10, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    tail = url.stdout.strip().rstrip("/").rsplit("/", 1)[-1].rsplit(":", 1)[-1]
+    tail = tail.removesuffix(".git")
+    return tail if url.returncode == 0 and tail else None
+
+
 def run_check(canon: Path | str, *, repo_name: str | None = None) -> CheckReport:
     """Run every check against *canon* and return the report. Never raises on content.
 
     Args:
         canon: the canon repo root.
-        repo_name: the repo's name when the directory name is not it (CI
-            checkouts); defaults to the canon directory's own name.
+        repo_name: the repo's name when neither the ``origin`` remote nor the
+            directory name gives it (CI checkouts). Defaults to the origin
+            remote's repo name, then the canon directory's own name.
     """
     root = Path(canon).expanduser()
     report = CheckReport()
@@ -249,7 +276,7 @@ def run_check(canon: Path | str, *, repo_name: str | None = None) -> CheckReport
         except ConfigError as exc:
             report.add(ERROR, "config", "skbrain.yaml", str(exc))
     if cfg is not None:
-        name = repo_name if repo_name else root.name
+        name = repo_name or _origin_repo_name(root) or root.name
         if not name.endswith(f"-{cfg.estate}"):
             report.add(
                 ERROR,

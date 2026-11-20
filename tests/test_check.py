@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -204,6 +206,34 @@ def test_repo_name_override_for_ci_checkouts(tmp_path: Path, canon: Path):
     canon.rename(wrong)
     assert "estate-repo-name" in codes(run_check(wrong), ERROR)
     assert run_check(wrong, repo_name="skbrain-ops-example").ok
+
+
+def _git_origin(repo: Path, url: str) -> None:
+    env = {"GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_SYSTEM": "/dev/null", "PATH": os.environ["PATH"]}
+    for args in (["init", "-q"], ["remote", "add", "origin", url]):
+        subprocess.run(["git", "-C", str(repo), *args], check=True, env=env, capture_output=True)
+
+
+def test_repo_name_comes_from_the_origin_remote_in_a_worktree(tmp_path: Path, canon: Path):
+    # A worktree directory is named <repo>.<branch>; the origin remote still names the repo.
+    wt_dir = tmp_path / "skbrain-ops-example.fix-something"
+    canon.rename(wt_dir)
+    _git_origin(wt_dir, "ssh://git@forge.example.com:222/org/skbrain-ops-example.git")
+    assert run_check(wt_dir).ok
+
+
+def test_origin_remote_from_another_estate_fails_even_if_the_dir_name_fits(tmp_path: Path, canon: Path):
+    _git_origin(canon, "https://forge.example.com/org/skbrain-ops-" + "other.git")
+    assert "estate-repo-name" in codes(run_check(canon), ERROR)
+
+
+def test_parent_repo_remote_is_not_used_for_a_nested_canon(tmp_path: Path, canon: Path):
+    parent = tmp_path / "outer"
+    parent.mkdir()
+    _git_origin(parent, "https://forge.example.com/org/skbrain-ops-" + "other.git")
+    nested = parent / canon.name
+    canon.rename(nested)
+    assert run_check(nested).ok
 
 
 def test_evidence_ref_from_another_estate_fails(canon: Path):
