@@ -9,6 +9,11 @@ All notable changes to this project are recorded here. The format follows
 ### Added
 - Instance workflow template: a step warns when a PR author is not in `skbrain.yaml` `writers` (warning only).
 
+### Fixed
+- `skbrain check` estate guard (`estate-repo-name`): the repo name now comes from the canon's own `origin` remote
+  before the directory name, so a worktree named `<repo>.<branch>` passes and a remote of another estate fails
+  even when the directory name fits. A canon nested in another repo never uses the parent's remote.
+
 ## [1.0.2] - 2026-11-15
 
 ### Fixed
